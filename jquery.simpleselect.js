@@ -80,6 +80,17 @@
 								publicMethods.setInactive.call(ssData);
 							}
 						},
+						keydown: function(e) {
+							var eventTarget = $(e.target);
+							if (eventTarget.hasClass("placeholder")) {
+								publicMethods.setActive.call(ssData);
+							// Handle clicks on options
+							} else if (eventTarget.hasClass("option")) {
+								isSsActivationForbidden = true; // Disable the eventual activation of the SimpleSelect if the select is focused, until a click event bubbles up to the document, at which point it's reset
+								selectOption.call(ssData, eventTarget);
+								publicMethods.setInactive.call(ssData);
+							}
+						},
 						mouseup: function() {
 							ssData.canBeClosed = true;
 						},
@@ -99,7 +110,11 @@
 						keydown: function(e) {
 							// On key enter
 							if (e.keyCode == 13) {
-								publicMethods.setInactive.call(ssData);
+								if(ssData.isActive) {
+									publicMethods.setInactive.call(ssData);
+								} else {
+									publicMethods.setActive.call(ssData);
+								}
 							}
 						},
 						focus: function() {
@@ -402,9 +417,6 @@
 					this.isActive = false;
 					removeFromActiveSimpleselects.call(this, this.simpleselect);
 					this.ssOptionsContainer.fadeOut(this.options.fadingDuration);
-					if (this.select.is(":focus")) {
-						this.select.blur();
-					}
 					var currentValue = this.select.val();
 					if (this.lastValue != currentValue) {
 						this.ssPlaceholder.text(getSelectedOption.call(this).text());
@@ -446,7 +458,9 @@
 			// Detect click events once they've bubbled up to the document
 			if (e.type == "click") {
 				// Reset the flag
-				// The following statement is appended to the end of the current call stack to ensure that, when the option of a SimpleSelect placed inside a label is clicked, events (or more precisely, statements handling isSsActivationForbidden and bound to those events) are triggered in the following order while in the bubbling phase:
+				// The following statement is appended to the end of the current call stack to ensure that, when the option 
+				// of a SimpleSelect placed inside a label is clicked, events (or more precisely, statements handling
+				// isSsActivationForbidden and bound to those events) are triggered in the following order while in the bubbling phase:
 				// Click on SimpleSelect option -> Click on SimpleSelect -> Click on label (thus focus on associated select) -> Click on document
 				// (In IE, if not interfering with the call stack, the click event finishes bubbling up before the focus event is fired on the select.)
 				setTimeout(function() {
@@ -470,6 +484,12 @@
 					}
 				}
 			}
+		});
+	
+		// Prevent form submission when hitting ENTER on a simpleselect.
+		$('form').on("keypress.simpleselect", function(e) {
+			e.preventDefault();
+			return false;
 		});
 	});
 	
