@@ -488,8 +488,10 @@
 	
 		// Prevent form submission when hitting ENTER on a simpleselect.
 		$('form').on("keypress.simpleselect", function(e) {
-			e.preventDefault();
-			return false;
+			if(e.keyCode === 13 && $(e.target).hasClass('simpleselected')) {
+				e.preventDefault();
+				return false;
+			}
 		});
 	});
 	
